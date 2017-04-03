@@ -10,6 +10,8 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 
+import static java.util.Collections.emptyList;
+
 @Priority(Priorities.AUTHENTICATION)
 public class HttpHeaderAuthFilter extends AuthFilter {
 
@@ -17,7 +19,7 @@ public class HttpHeaderAuthFilter extends AuthFilter {
 
   protected HttpHeaderAuthFilter() {}
   public HttpHeaderAuthFilter(List<String> tokens) {
-    this.tokens = tokens;
+    this.tokens = tokens == null ? emptyList() : tokens;
   }
 
   @Override

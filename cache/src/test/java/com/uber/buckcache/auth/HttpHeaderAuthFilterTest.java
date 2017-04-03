@@ -32,8 +32,13 @@ public class HttpHeaderAuthFilterTest {
   }
 
   @Test
-  public void testSuccessWithoutAuthenticatedToken() throws IOException {
+  public void testSuccessWithEmptyAuthenticatedToken() throws IOException {
     (new HttpHeaderAuthFilter()).filter(mockRequestContextWithHeader);
+  }
+
+  @Test
+  public void testSuccessWithNullAuthenticatedToken() throws IOException {
+    (new HttpHeaderAuthFilter(null)).filter(mockRequestContextWithHeader);
   }
 
   @Test
