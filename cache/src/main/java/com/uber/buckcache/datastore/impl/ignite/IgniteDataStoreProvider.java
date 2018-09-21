@@ -104,7 +104,11 @@ public class IgniteDataStoreProvider implements DataStoreProvider {
       return HealthCheck.Result.unhealthy("Ignite instance is null");
     }
 
-    return HealthCheck.Result.healthy("OK");
+    if (igniteInstance.isHealthy()) {
+      return HealthCheck.Result.healthy();
+    }
+
+    return Result.unhealthy("Ignite instance is not healthy");
   }
 
   private void putData(String[] keys, CacheEntry cacheEntry, Optional<ExpiryPolicy> policy) {

@@ -28,6 +28,9 @@ public class MetricsRegistry {
   public static final String HEAP_TIME = "buck_cache_server_heap_usage_timer";
   public static final String OFF_HEAP_COUNT = "buck_cache_server_off_heap_usage";
   public static final String OFF_HEAP_TIME = "buck_cache_server_off_heap_usage_timer";
-  
+
+  public static final String SUMMARY_ERROR_COUNT = "summary_error_count";
+  public static final String GET_ERROR_COUNT = "get_artifact_resource_error_count";
+  public static final String PUT_ERROR_COUNT = "put_artifact_resource_error_count";
   
 }

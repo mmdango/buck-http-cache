@@ -125,6 +125,10 @@ public class IgniteInstance {
     return ignite.cluster().ignite();
   }
 
+  public boolean isHealthy() {
+    return !cacheKeys.isClosed() && !buckDataCache.isClosed() && !reverseCacheKeys.isClosed();
+  }
+
   public void reportMetrics() {
     // TODO: check and make sure that these are not costly to compute
     ClusterNode thisNode = ignite.cluster().localNode();

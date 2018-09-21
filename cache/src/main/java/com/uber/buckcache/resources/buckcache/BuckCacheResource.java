@@ -1,17 +1,5 @@
 package com.uber.buckcache.resources.buckcache;
 
-import static com.uber.buckcache.utils.MetricsRegistry.GET_CALL_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.GET_CALL_TIME;
-import static com.uber.buckcache.utils.MetricsRegistry.INCOMING_BYTES_PER_REQUEST;
-import static com.uber.buckcache.utils.MetricsRegistry.INCOMING_BYTES_TOTAL_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.OUTGOING_BYTES_PER_REQUEST;
-import static com.uber.buckcache.utils.MetricsRegistry.OUTGOING_BYTES_TOTAL_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.PUT_CALL_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.PUT_CALL_TIME;
-import static com.uber.buckcache.utils.MetricsRegistry.SUMMARY_CALL_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.CACHE_HIT_COUNT;
-import static com.uber.buckcache.utils.MetricsRegistry.CACHE_MISS_COUNT;
-
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -52,6 +40,9 @@ import com.uber.buckcache.datastore.exceptions.DatastoreUnavailableException;
 import com.uber.buckcache.datastore.exceptions.EntryNotFoundException;
 import com.uber.buckcache.utils.BytesRateLimiter;
 import com.uber.buckcache.utils.StatsDClient;
+
+import static com.uber.buckcache.utils.MetricsRegistry.*;
+
 /**
  * Buck HTTP Cache API implementation.
  * See: https://buckbuild.com/concept/http_cache_api.html
@@ -75,8 +66,14 @@ public class BuckCacheResource {
   @Produces(MediaType.TEXT_PLAIN)
   public String getSummary() throws Exception {
     StatsDClient.get().count(SUMMARY_CALL_COUNT, 1L);
-    return String.format("Storing %d artifacts with %d keys.", storeProvider.getNumberOfValues(),
-        storeProvider.getNumberOfKeys());
+    try {
+      return String.format("Storing %d artifacts with %d keys.", storeProvider.getNumberOfValues(),
+              storeProvider.getNumberOfKeys());
+    } catch (Exception e) {
+      e.printStackTrace();
+      StatsDClient.get().count(SUMMARY_ERROR_COUNT, 1L);
+      return "I am broken";
+    }
   }
 
   @GET
@@ -96,6 +93,7 @@ public class BuckCacheResource {
       StatsDClient.get().recordExecutionTime(OUTGOING_BYTES_PER_REQUEST, cacheEntry.getBytes());
     } catch (DatastoreUnavailableException ex) {
       StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start);
+      StatsDClient.get().count(GET_ERROR_COUNT, 1L);
       return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
     } catch (EntryNotFoundException ex) {
       logger.debug("Cache MISS", key);
@@ -133,6 +131,9 @@ public class BuckCacheResource {
                     expiryTime);
           } catch (NumberFormatException e) {
             storeProvider.putData(putCacheEntry.getKeys(), putCacheEntry.getCacheEntry());
+          } catch (Exception e) {
+            e.printStackTrace();
+            StatsDClient.get().count(PUT_ERROR_COUNT, 1L);
           }
         } else {
           storeProvider.putData(putCacheEntry.getKeys(), putCacheEntry.getCacheEntry());
@@ -146,6 +147,7 @@ public class BuckCacheResource {
         return Response.status(Response.Status.ACCEPTED).build();
       } catch (DatastoreUnavailableException ex) {
         StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start);
+        StatsDClient.get().count(PUT_ERROR_COUNT, 1L);
         return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
       }
     } else {

@@ -65,7 +65,7 @@ public class BuckCacheApplication extends Application<BuckCacheConfiguration> {
 
       final BuckCacheResource buckCacheResource = new BuckCacheResource(dataStoreProvider, rateLimiter);
       environment.jersey().register(buckCacheResource);
-      environment.jersey().register(new HealthResource());
+      environment.jersey().register(new HealthResource(dataStoreProvider));
       environment.jersey().register(BuckCacheResource.CacheResultBodyReader.class);
       environment.jersey().register(BuckCacheResource.CacheResultBodyWriter.class);
 
