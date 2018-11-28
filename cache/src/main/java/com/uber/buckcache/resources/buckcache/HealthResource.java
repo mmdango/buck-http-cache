@@ -6,6 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/health")
 @Produces(MediaType.TEXT_PLAIN)
@@ -18,12 +19,16 @@ public class HealthResource {
   }
 
   @GET
-  public String getHealth() {
+  public Response getHealth() {
     try {
-      return dataStoreProvider.check().isHealthy() ? "OK" : "NOT OK";
+      if (dataStoreProvider.check().isHealthy()) {
+        return Response.ok().build();
+      } else {
+        return Response.serverError().entity("NOT OK").build();
+      }
     } catch (Exception e) {
       e.printStackTrace();
-      return "SUPER NOT OKAY";
+      return Response.serverError().entity("SUPER NOT OKAY").build();
     }
   }
 }
