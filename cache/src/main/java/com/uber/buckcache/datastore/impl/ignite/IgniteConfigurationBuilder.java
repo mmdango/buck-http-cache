@@ -15,6 +15,7 @@ import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.configuration.AtomicConfiguration;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.plugin.segmentation.SegmentationPolicy;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
@@ -39,6 +40,7 @@ public class IgniteConfigurationBuilder {
   protected IgniteConfigurationBuilder(DnsSrvResolver dnsResolver) {
     this.dnsResolver = dnsResolver;
     igniteConfiguration = new IgniteConfiguration();
+    igniteConfiguration.setSegmentationPolicy(SegmentationPolicy.RESTART_JVM);
   }
 
   public IgniteConfigurationBuilder addMulticastBasedDiscrovery(String multicastIP, Integer multicastPort, List<String> hostIPs, String dnsLookupAddress) {
