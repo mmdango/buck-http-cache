@@ -62,13 +62,6 @@ public class BuckCacheResource {
     this.storeProvider = storeProvider;
   }
 
-  private static String getCacheKeyWithCustomizedParam(String key, String cacheTags) {
-    if (StringUtils.isEmpty(cacheTags)) {
-      return key;
-    }
-    return String.format("%s.%s", key, cacheTags);
-  }
-
   @GET
   @Path("summary")
   @Produces(MediaType.TEXT_PLAIN)
@@ -89,7 +82,7 @@ public class BuckCacheResource {
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   public Response getCacheArtifact(@PathParam("key") String key,
                                    @HeaderParam(X_CACHE_TAGS) String cacheTags) throws Exception {
-    StatsDClient.get().count(getCacheKeyWithCustomizedParam(GET_CALL_COUNT, cacheTags), 1L);
+    StatsDClient.get().count(GET_CALL_COUNT, 1L, cacheTags);
     CacheEntry cacheEntry;
     long start = System.currentTimeMillis();
 
@@ -98,22 +91,22 @@ public class BuckCacheResource {
       // TODO: need to kill the requests rather than queue here
       rateLimiter.checkout(cacheEntry.getBytes());
 
-      StatsDClient.get().count(OUTGOING_BYTES_TOTAL_COUNT, cacheEntry.getBytes());
-      StatsDClient.get().recordExecutionTime(OUTGOING_BYTES_PER_REQUEST, cacheEntry.getBytes());
+      StatsDClient.get().count(OUTGOING_BYTES_TOTAL_COUNT, cacheEntry.getBytes(), cacheTags);
+      StatsDClient.get().recordExecutionTime(OUTGOING_BYTES_PER_REQUEST, cacheEntry.getBytes(), cacheTags);
     } catch (DatastoreUnavailableException ex) {
-      StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start);
-      StatsDClient.get().count(GET_ERROR_COUNT, 1L);
+      StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start, cacheTags);
+      StatsDClient.get().count(GET_ERROR_COUNT, 1L, cacheTags);
       return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
     } catch (EntryNotFoundException ex) {
       logger.debug("Cache MISS", key);
-      StatsDClient.get().count(getCacheKeyWithCustomizedParam(CACHE_MISS_COUNT, cacheTags), 1L);
-      StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start);
+      StatsDClient.get().count(CACHE_MISS_COUNT, 1L, cacheTags);
+      StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start, cacheTags);
       return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     logger.debug("Cache hit", key);
-    StatsDClient.get().count(getCacheKeyWithCustomizedParam(CACHE_HIT_COUNT, cacheTags), 1L);
-    StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start);
+    StatsDClient.get().count(CACHE_HIT_COUNT, 1L, cacheTags);
+    StatsDClient.get().recordExecutionTimeToNow(GET_CALL_TIME, start, cacheTags);
     return Response.ok(cacheEntry).build();
   }
 
@@ -122,8 +115,9 @@ public class BuckCacheResource {
   @Path("key")
   @Consumes(MediaType.APPLICATION_OCTET_STREAM)
   public Response addArtifactToCache(PutCacheEntry putCacheEntry,
-                                     @HeaderParam(X_CACHE_EXPIRY_SECONDS) String cacheExpirySeconds) throws Exception {
-    StatsDClient.get().count(PUT_CALL_COUNT, 1L);
+                                     @HeaderParam(X_CACHE_EXPIRY_SECONDS) String cacheExpirySeconds,
+                                     @HeaderParam(X_CACHE_TAGS) String cacheTags) throws Exception {
+    StatsDClient.get().count(PUT_CALL_COUNT, 1L, cacheTags);
 
     long start = System.currentTimeMillis();
     if (putCacheEntry.verify()) {
@@ -142,25 +136,25 @@ public class BuckCacheResource {
             storeProvider.putData(putCacheEntry.getKeys(), putCacheEntry.getCacheEntry());
           } catch (Exception e) {
             e.printStackTrace();
-            StatsDClient.get().count(PUT_ERROR_COUNT, 1L);
+            StatsDClient.get().count(PUT_ERROR_COUNT, 1L, cacheTags);
           }
         } else {
           storeProvider.putData(putCacheEntry.getKeys(), putCacheEntry.getCacheEntry());
         }
 
-        StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start);
+        StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start, cacheTags);
 
-        StatsDClient.get().count(INCOMING_BYTES_TOTAL_COUNT, putCacheEntry.getBytes());
-        StatsDClient.get().recordExecutionTime(INCOMING_BYTES_PER_REQUEST, putCacheEntry.getBytes());
+        StatsDClient.get().count(INCOMING_BYTES_TOTAL_COUNT, putCacheEntry.getBytes(), cacheTags);
+        StatsDClient.get().recordExecutionTime(INCOMING_BYTES_PER_REQUEST, putCacheEntry.getBytes(), cacheTags);
 
         return Response.status(Response.Status.ACCEPTED).build();
       } catch (DatastoreUnavailableException ex) {
-        StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start);
-        StatsDClient.get().count(PUT_ERROR_COUNT, 1L);
+        StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start, cacheTags);
+        StatsDClient.get().count(PUT_ERROR_COUNT, 1L, cacheTags);
         return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
       }
     } else {
-      StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start);
+      StatsDClient.get().recordExecutionTimeToNow(PUT_CALL_TIME, start, cacheTags);
       return Response.status(Response.Status.NOT_ACCEPTABLE).build();
     }
   }

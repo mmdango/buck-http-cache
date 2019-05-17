@@ -7,6 +7,7 @@ def versions = [
         jacksonVersion: "2.8.2",
         uuidGenVersion: "3.1.3",
         statsdClientVersion: "3.0.1",
+        dogstatsdClientVersion: "2.7",
         dnsVersion: "3.1.4",
 ]
 
@@ -25,6 +26,7 @@ def external = [
         jackson           : "com.fasterxml.jackson.core:jackson-databind:${versions.jacksonVersion}",
         uuidGen           : "com.fasterxml.uuid:java-uuid-generator:${versions.uuidGenVersion}",
         statsdClient      : "com.timgroup:java-statsd-client:${versions.statsdClientVersion}",
+        dogstatsdClient   : "com.datadoghq:java-dogstatsd-client:${versions.dogstatsdClientVersion}",
         dns               : "com.spotify:dns:${versions.dnsVersion}",
 ]
 
