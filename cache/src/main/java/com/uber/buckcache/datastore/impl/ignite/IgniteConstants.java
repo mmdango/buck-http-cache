@@ -18,6 +18,7 @@ public class IgniteConstants {
       put(EventType.EVT_CACHE_OBJECT_EXPIRED, "EXPIRED");
       put(EventType.EVT_CACHE_OBJECT_REMOVED, "REMOVED");
       put(EventType.EVT_CACHE_ENTRY_EVICTED, "EVICTED");
+      put(EventType.EVT_CACHE_ENTRY_DESTROYED, "DESTROYED");
     }
   };
 }

@@ -63,8 +63,15 @@ public class IgniteInstance {
     buckDataCache = ignite.cluster().ignite().getOrCreateCache(METADATA_CACHE_NAME);
     atomicSequence = ignite.cluster().ignite().atomicSequence(UNDERLYING_KEY_SEQUENCE_NAME, 0, true);
 
+    int[] localListenEvents = {
+      EventType.EVT_CACHE_OBJECT_EXPIRED,
+      EventType.EVT_CACHE_OBJECT_REMOVED,
+      EventType.EVT_CACHE_ENTRY_EVICTED,
+      EventType.EVT_CACHE_ENTRY_DESTROYED,
+    };
+    ignite.events().enableLocal(localListenEvents);
     ignite.events().localListen(new LocalCacheEventListener(buckDataCache, reverseCacheKeys, cacheKeys),
-        EventType.EVT_CACHE_OBJECT_EXPIRED, EventType.EVT_CACHE_OBJECT_REMOVED);
+      localListenEvents);
   }
 
   public void start() {

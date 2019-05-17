@@ -32,5 +32,8 @@ authenticationConfig:
   tokens:
 
 statsd:
-  enabled: false
-
+  enabled: true
+  host: localhost
+  port: 8125
+  prefix: buck_cache.test
+  sampleRate: 1.0

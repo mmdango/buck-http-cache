@@ -34,7 +34,5 @@ public class MetricsRegistry {
   public static final String SUMMARY_ERROR_COUNT = "summary_error_count";
   public static final String GET_ERROR_COUNT = "get_artifact_resource_error_count";
   public static final String PUT_ERROR_COUNT = "put_artifact_resource_error_count";
-
-  public static final String ARTIFACT_EVICTION_COUNT = "artifact_eviction_count";
   
 }
