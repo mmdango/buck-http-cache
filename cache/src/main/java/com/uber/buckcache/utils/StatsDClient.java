@@ -1,5 +1,10 @@
 package com.uber.buckcache.utils;
 
+import java.util.Arrays;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.timgroup.statsd.NoOpStatsDClient;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.uber.buckcache.StatsdConfig;
@@ -31,21 +36,32 @@ public class StatsDClient {
     return statsDClient;
   }
 
-  public void count(String metricName, long countValue) {
-    underlyingClient.count(metricName, countValue, statsDConfig.getSampleRate());
+  private String[] customUnifiedTag(String[] tags) {
+      tags = Arrays.stream(tags)
+              .filter(StringUtils::isNotEmpty)
+              .map(t -> StringUtils.replaceChars(t, ':', '_'))
+              .toArray(String[]::new);
+      if (tags.length > 0) {
+          tags = ArrayUtils.toArray("cache_tags:" + StringUtils.join(tags, '.'));
+      }
+      return tags;
   }
 
-  public void gauge(String metricName, long countValue) {
-    underlyingClient.gauge(metricName, countValue);
+  public void count(String metricName, long countValue, String... tags) {
+    underlyingClient.count(metricName, countValue, statsDConfig.getSampleRate(), customUnifiedTag(tags));
   }
 
-  public void recordExecutionTime(String metricName, long timeDifferenceInMillis) {
-    underlyingClient.recordExecutionTime(metricName, timeDifferenceInMillis, statsDConfig.getSampleRate());
+  public void gauge(String metricName, long countValue, String... tags) {
+    underlyingClient.gauge(metricName, countValue, customUnifiedTag(tags));
   }
 
-  public void recordExecutionTimeToNow(String metricName, long startTime) {
+  public void recordExecutionTime(String metricName, long timeDifferenceInMillis, String... tags) {
+    underlyingClient.recordExecutionTime(metricName, timeDifferenceInMillis, statsDConfig.getSampleRate(), customUnifiedTag(tags));
+  }
+
+  public void recordExecutionTimeToNow(String metricName, long startTime, String... tags) {
     underlyingClient.recordExecutionTime(metricName, System.currentTimeMillis() - startTime,
-        statsDConfig.getSampleRate());
+        statsDConfig.getSampleRate(), customUnifiedTag(tags));
   }
   
   public com.timgroup.statsd.StatsDClient getUnderlying() {
