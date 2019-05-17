@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.uber.buckcache.datastore.impl.ignite.IgniteConstants.ARTIFACT_CACHE_NAME;
 import static com.uber.buckcache.datastore.impl.ignite.IgniteConstants.EVENT_TYPE_TO_NAME_MAP;
-import static com.uber.buckcache.utils.MetricsRegistry.ARTIFACT_EVICTION_COUNT;
 
 public class LocalCacheEventListener implements IgnitePredicate<CacheEvent> {
   private static Logger logger = LoggerFactory.getLogger(LocalCacheEventListener.class);
@@ -27,6 +26,13 @@ public class LocalCacheEventListener implements IgnitePredicate<CacheEvent> {
 
   @Override
   public boolean apply(CacheEvent evt) {
+    String cacheEventName = EVENT_TYPE_TO_NAME_MAP.get(evt.type());
+    if (cacheEventName != null && cacheEventName.length() > 0) {
+      String cacheEventMetric = String.format("event_cache.%s.%s.count", evt.cacheName(), cacheEventName).toLowerCase();
+      logger.info("Reporting artifact-cache event: {} for key: {}", cacheEventMetric, evt.key());
+      StatsDClient.get().count(cacheEventMetric, 1L);
+    }
+    // I suspect codepath below will never execute since there is no cache setup with name ARTIFACT_CACHE_NAME
     if (evt.cacheName().equals(ARTIFACT_CACHE_NAME)) {
 
       final String eventName =
@@ -41,8 +47,6 @@ public class LocalCacheEventListener implements IgnitePredicate<CacheEvent> {
       }
 
       metadataCache.remove(underlyingKey);
-
-      StatsDClient.get().count(ARTIFACT_EVICTION_COUNT, 1L);
     }
 
     return true;
