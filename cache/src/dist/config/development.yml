@@ -33,7 +33,7 @@ authenticationConfig:
 
 statsd:
   enabled: true
-  host: localhost
+  host: localhost  # Test what is getting dumped to statsd locally with : 'nc -k -l -u 0.0.0.0 8125'
   port: 8125
   prefix: buck_cache.test
   sampleRate: 1.0

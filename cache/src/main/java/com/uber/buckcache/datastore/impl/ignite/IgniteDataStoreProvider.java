@@ -4,6 +4,7 @@ import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_GET_CALL_COU
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_GET_CALL_TIME;
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_CALL_COUNT;
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_CALL_TIME;
+import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_ARTIFACT_COLLISION_COUNT;
 
 import java.io.IOException;
 
@@ -115,6 +116,12 @@ public class IgniteDataStoreProvider implements DataStoreProvider {
     StatsDClient.get().count(IGNITE_CACHE_PUT_CALL_COUNT, 1L);
     long start = System.currentTimeMillis();
     Long underlyingId = igniteInstance.getAtomicSequence().incrementAndGet();
+
+    // log artifact collisions if any
+    if (igniteInstance.getBuckDataCache(policy).containsKey(underlyingId)) {
+      logger.info("{} hit: Rulekeys: {}", IGNITE_CACHE_PUT_ARTIFACT_COLLISION_COUNT, String.join(",", keys));
+      StatsDClient.get().count(IGNITE_CACHE_PUT_ARTIFACT_COLLISION_COUNT, 1L);
+    }
 
     // Write backwards, adding the entry first, before adding the keys.
     igniteInstance.getBuckDataCache(policy).put(underlyingId, cacheEntry.getBuckData());
