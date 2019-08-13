@@ -39,9 +39,9 @@ public class IgniteInstance {
   private final Ignite ignite;
 
   private final IgniteAtomicSequence atomicSequence;
-  private final IgniteCache<String, Long> cacheKeys;
-  private final IgniteCache<Long, String[]> reverseCacheKeys;
-  private final IgniteCache<Long, byte[]> buckDataCache;
+  private final IgniteCache<String, String> cacheKeys;
+  private final IgniteCache<String, String[]> reverseCacheKeys;
+  private final IgniteCache<String, byte[]> buckDataCache;
   private final Timer timer = new Timer("ignite_metrics_reporter");
 
   public IgniteInstance(CacheInstanceMode mode, IgniteConfig config) {
@@ -89,19 +89,19 @@ public class IgniteInstance {
     Ignition.stop(ignite.name(), false);
   }
 
-  public IgniteCache<String, Long> getCacheKeys() {
+  public IgniteCache<String, String> getCacheKeys() {
     return cacheKeys;
   }
 
-  public IgniteCache<Long, String[]> getReverseCacheKeys() {
+  public IgniteCache<String, String[]> getReverseCacheKeys() {
     return reverseCacheKeys;
   }
 
-  public IgniteCache<Long, byte[]> getBuckDataCache() {
+  public IgniteCache<String, byte[]> getBuckDataCache() {
     return buckDataCache;
   }
 
-  public IgniteCache<String, Long> getCacheKeys(Optional<ExpiryPolicy> policy) {
+  public IgniteCache<String, String> getCacheKeys(Optional<ExpiryPolicy> policy) {
     if (policy.isPresent()) {
       return cacheKeys.withExpiryPolicy(policy.get());
     } else {
@@ -109,7 +109,7 @@ public class IgniteInstance {
     }
   }
 
-  public IgniteCache<Long, String[]> getReverseCacheKeys(Optional<ExpiryPolicy> policy) {
+  public IgniteCache<String, String[]> getReverseCacheKeys(Optional<ExpiryPolicy> policy) {
     if (policy.isPresent()) {
       return reverseCacheKeys.withExpiryPolicy(policy.get());
     } else {
@@ -117,7 +117,7 @@ public class IgniteInstance {
     }
   }
 
-  public IgniteCache<Long, byte[]> getBuckDataCache(Optional<ExpiryPolicy> policy) {
+  public IgniteCache<String, byte[]> getBuckDataCache(Optional<ExpiryPolicy> policy) {
     if (policy.isPresent()) {
       return buckDataCache.withExpiryPolicy(policy.get());
     } else {
