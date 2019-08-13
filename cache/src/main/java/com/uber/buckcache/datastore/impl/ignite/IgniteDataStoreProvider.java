@@ -5,6 +5,7 @@ import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_GET_CALL_TIM
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_CALL_COUNT;
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_CALL_TIME;
 import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_ARTIFACT_COLLISION_COUNT;
+import static com.uber.buckcache.utils.MetricsRegistry.IGNITE_CACHE_PUT_NO_RULEKEYS_COUNT;
 
 import java.io.IOException;
 
@@ -64,7 +65,7 @@ public class IgniteDataStoreProvider implements DataStoreProvider {
     StatsDClient.get().count(IGNITE_CACHE_GET_CALL_COUNT, 1L);
     long start = System.currentTimeMillis();
 
-    Long underlyingId = igniteInstance.getCacheKeys().get(key);
+    String underlyingId = igniteInstance.getCacheKeys().get(key);
 
     if (underlyingId != null) {
       byte[] buckCacheData = igniteInstance.getBuckDataCache().get(underlyingId);
@@ -114,8 +115,18 @@ public class IgniteDataStoreProvider implements DataStoreProvider {
 
   private void putData(String[] keys, CacheEntry cacheEntry, Optional<ExpiryPolicy> policy) {
     StatsDClient.get().count(IGNITE_CACHE_PUT_CALL_COUNT, 1L);
+    if (keys.length == 0) {
+      // there is no point storing the artifact if no keys can refer to it
+      logger.info("{} hit, artifact-size: {}", IGNITE_CACHE_PUT_NO_RULEKEYS_COUNT, cacheEntry.getBuckData().length);
+      StatsDClient.get().count(IGNITE_CACHE_PUT_NO_RULEKEYS_COUNT, 1L);
+      return;
+    }
     long start = System.currentTimeMillis();
-    Long underlyingId = igniteInstance.getAtomicSequence().incrementAndGet();
+
+    // Logging suggests that auto-increment-ids collide sometimes.
+    // Let's use first Rulekey to make underlyingID more unique.
+    Long underlyingIdSuffix = igniteInstance.getAtomicSequence().incrementAndGet();
+    String underlyingId = keys[0] + ":" + underlyingIdSuffix;
 
     // log artifact collisions if any
     if (igniteInstance.getBuckDataCache(policy).containsKey(underlyingId)) {

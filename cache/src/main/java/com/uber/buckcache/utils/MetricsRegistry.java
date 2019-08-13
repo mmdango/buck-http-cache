@@ -23,6 +23,7 @@ public class MetricsRegistry {
   public static final String IGNITE_CACHE_PUT_CALL_COUNT = "ignite_cache_put_count";
   public static final String IGNITE_CACHE_PUT_CALL_TIME = "ignite_cache_put_time";
   public static final String IGNITE_CACHE_PUT_ARTIFACT_COLLISION_COUNT = "ignite_cache_put_artifact_collision_count";
+  public static final String IGNITE_CACHE_PUT_NO_RULEKEYS_COUNT = "ignite_cache_put_no_rulekeys_count";
 
   
   public static final String CPU_COUNT = "buck_cache_server_cpu_usage";
