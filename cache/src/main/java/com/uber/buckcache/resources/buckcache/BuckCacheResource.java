@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
@@ -74,6 +75,29 @@ public class BuckCacheResource {
       e.printStackTrace();
       StatsDClient.get().count(SUMMARY_ERROR_COUNT, 1L);
       return "I am broken";
+    }
+  }
+
+  /**
+   * Used for client side to measure download speed.
+   * @param size
+   * @return
+   * @throws Exception
+   */
+  @GET
+  @Path("dummy")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  public String getDummyArtifact() throws Exception {
+    Random rand = new Random();
+    rand.setSeed(System.currentTimeMillis());
+    try {
+      // 100Kb
+      byte[] bytes = new byte[100000];
+      rand.nextBytes(bytes);
+      return new String(bytes);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return e.getMessage();
     }
   }
 
