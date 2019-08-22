@@ -94,7 +94,7 @@ public class BuckCacheResource {
     Random rand = new Random();
     rand.setSeed(System.currentTimeMillis());
     try {
-      byte[] bytes = new byte[size*1024];
+      byte[] bytes = new byte[size * 1024];
       rand.nextBytes(bytes);
       return Response.ok(bytes).build();
     } catch (Exception e) {
