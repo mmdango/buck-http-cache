@@ -80,24 +80,23 @@ public class BuckCacheResource {
 
   /**
    * Used for client side to measure download speed.
-   * @param size
-   * @return
+   * @param size - in kilobytes
+   * @return byte[] - with size in kilobytes
    * @throws Exception
    */
   @GET
-  @Path("dummy")
+  @Path("dummy/{size}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  public String getDummyArtifact() throws Exception {
+  public Response getDummyArtifact(@PathParam("size") int size) throws Exception {
     Random rand = new Random();
     rand.setSeed(System.currentTimeMillis());
     try {
-      // 100Kb
-      byte[] bytes = new byte[100000];
+      byte[] bytes = new byte[size*1024];
       rand.nextBytes(bytes);
-      return new String(bytes);
+      return Response.ok(bytes).build();
     } catch (Exception e) {
       e.printStackTrace();
-      return e.getMessage();
+      return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
     }
   }
 
