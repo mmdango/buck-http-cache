@@ -80,7 +80,7 @@ public class BuckCacheResource {
 
   /**
    * Used for client side to measure download speed.
-   * @param size - in kilobytes
+   * @param size - in kilobytes, max of 1024 kilobytes
    * @return byte[] - with size in kilobytes
    * @throws Exception
    */
@@ -88,6 +88,9 @@ public class BuckCacheResource {
   @Path("dummy/{size}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   public Response getDummyArtifact(@PathParam("size") int size) throws Exception {
+    if (size > 1024) {
+      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Max of 1024 Kilobytes").build();
+    }
     Random rand = new Random();
     rand.setSeed(System.currentTimeMillis());
     try {
