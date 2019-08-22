@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.security.PermitAll;
 import javax.ws.rs.Consumes;
@@ -74,6 +75,31 @@ public class BuckCacheResource {
       e.printStackTrace();
       StatsDClient.get().count(SUMMARY_ERROR_COUNT, 1L);
       return "I am broken";
+    }
+  }
+
+  /**
+   * Used for client side to measure download speed.
+   * @param size - in kilobytes, max of 1024 kilobytes
+   * @return byte[] - with size in kilobytes
+   * @throws Exception
+   */
+  @GET
+  @Path("dummy/{size}")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  public Response getDummyArtifact(@PathParam("size") int size) throws Exception {
+    if (size > 1024) {
+      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Max of 1024 Kilobytes").build();
+    }
+    Random rand = new Random();
+    rand.setSeed(System.currentTimeMillis());
+    try {
+      byte[] bytes = new byte[size*1024];
+      rand.nextBytes(bytes);
+      return Response.ok(bytes).build();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
     }
   }
 
